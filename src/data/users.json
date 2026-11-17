@@ -1,0 +1,16 @@
+﻿{
+  "standardUser": {
+    "username": "standard_user",
+    "password": "secret_sauce"
+  },
+  "lockedOutUser": {
+    "username": "locked_out_user",
+    "password": "secret_sauce",
+    "expectedError": "Epic sadface: Sorry, this user has been locked out."
+  },
+  "checkoutInfo": {
+    "firstName": "Rima",
+    "lastName": "Othman",
+    "postalCode": "13110"
+  }
+}
