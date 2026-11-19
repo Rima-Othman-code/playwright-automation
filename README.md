@@ -1,6 +1,6 @@
 ﻿# Playwright TypeScript Automation Framework (UI & API)
 
-[![Playwright Automation CI](https://img.shields.io/github/actions/workflow/status/Rima-Othman-code/playwright-automation/playwright.yml?branch=main&label=Playwright%20Automation%20CI)](https://github.com/Rima-Othman-code/playwright-automation/actions/workflows/playwright.yml)
+![Playwright Automation CI](https://img.shields.io/github/actions/workflow/status/Rima-Othman-code/playwright-automation/playwright.yml?branch=main&label=Playwright%20Automation%20CI)
 ![Playwright](https://img.shields.io/badge/Playwright-1.65.1-2EAD33?logo=playwright&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-6.0.3-3178C6?logo=typescript&logoColor=white)
 
@@ -10,7 +10,7 @@ End-to-end UI and API automation framework for **SauceDemo** and the **Simple Bo
 
 **Playwright TypeScript Automation Framework (UI & API)**
 
-[![Playwright Automation CI](https://img.shields.io/github/actions/workflow/status/Rima-Othman-code/playwright-automation/playwright.yml?branch=main&label=Playwright%20Automation%20CI)](https://github.com/Rima-Othman-code/playwright-automation/actions/workflows/playwright.yml)
+![Playwright Automation CI](https://img.shields.io/github/actions/workflow/status/Rima-Othman-code/playwright-automation/playwright.yml?branch=main&label=Playwright%20Automation%20CI)
 ![Playwright](https://img.shields.io/badge/Playwright-1.65.1-2EAD33?logo=playwright&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-6.0.3-3178C6?logo=typescript&logoColor=white)
 
@@ -38,22 +38,17 @@ UI base URL: `https://www.saucedemo.com`. API base URL: `https://simple-books-ap
 ## 4. Setup & Installation
 
 1. **Clone the repository:**
-
    ```bash
-   git clone https://github.com/Rima-Othman-code/playwright-automation.git
-   cd playwright-automation
+         git clone https://github.com/Rima-Othman-code/playwright-automation.git
+         cd playwright-automation
    ```
-
 2. **Install dependencies:**
-
    ```bash
-   npm install
+         npm install
    ```
-
 3. **Install Playwright browsers:**
-
    ```bash
-   npx playwright install chromium firefox
+         npx playwright install chromium firefox
    ```
 
 ## 5. Running Tests
@@ -116,21 +111,21 @@ Eight scenarios. UI cases run on Chromium and Firefox. API cases run against `ht
 
 ### UI test cases (SauceDemo)
 
-| ID | Scenario | What it checks |
-| --- | --- | --- |
-| TC_UI_001 | Successful login with the standard user | Lands on `inventory.html`, title is `Products`, and 6 products are listed |
-| TC_UI_002 | Locked-out user login | The error banner is visible and matches the locked-out message |
-| TC_UI_003 | Sort by price (low to high) with a saved session | Prices on the inventory page are in ascending order |
-| TC_UI_004 | Checkout with 2 products | Cart badge is `2`, the cart has 2 items, and the header is `Thank you for your order!` |
+| ID        | Scenario                                                         | What it checks                                                                                                           |
+| --------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| TC_UI_001 | Successful login with standard user                              | Logs in with a valid user and verifies landing on the Inventory page                                                     |
+| TC_UI_002 | Data-Driven Invalid Login Validation                             | Runs 3 negative test scenarios to validate error messages on the Login page                                              |
+| TC_UI_003 | Verify Products Sorted in Descending Alphabetical Order (Z to A) | Changes the sort option to Name (Z to A) on the Products page and validates the displayed order                          |
+| TC_UI_004 | Complete end-to-end checkout flow with 2 products                | Asserts navigation to the Products page, dynamically adds the 2 most expensive items to the cart, and completes checkout |
 
 ### API test cases (Simple Books API)
 
-| ID | Scenario | What it checks |
-| --- | --- | --- |
-| TC_API_001 | API health | `GET /status` returns 200 and `status` is `OK` |
-| TC_API_002 | Filtered book list | `GET /books?type=fiction&limit=5` returns 1–5 fiction books, then stores an available book id |
-| TC_API_003 | Register an API client | `POST /api-clients` returns 201 and a bearer `accessToken` (unique email each run) |
-| TC_API_004 | Order lifecycle | Create order (201), get it (200), delete it (204), then get it again (404) |
+| ID         | Scenario                                       | What it checks                                                                                                                                                 |
+| ---------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| TC_API_001 | Authenticate Client and Create New Book Order  | Authenticates the client via `POST /api-clients/`, retrieves available books via `GET /books`, submits an order via `POST /orders`, and extracts the `orderId` |
+| TC_API_002 | Retrieve Details of a Newly Created Order      | Sends `GET /orders/:orderId` and validates the response body matches the created order                                                                         |
+| TC_API_003 | Modify Customer Name on an Existing Order      | Sends `PATCH /orders/:orderId` to update the customer name, then sends `GET /orders/:orderId` to verify the update                                             |
+| TC_API_004 | Delete Existing Order and Verify 404 Not Found | Deletes the order via `DELETE /orders/:orderId` and verifies removal with a `404 Not Found` check                                                              |
 
 ## 8. Viewing Reports
 
@@ -138,12 +133,9 @@ Playwright writes an HTML report to `reports/html-report` and does not open it a
 
 1. Run any test command from section 5. Wait until the process exits.
 2. Open the report:
-
    ```bash
-   npm run report
+         npm run report
    ```
-
-   That runs `npx playwright show-report reports/html-report`. Playwright serves the report on a local port and opens it in your default browser.
 3. Use the report UI to open a test, its error, screenshots, video, and trace.
 4. Stop the local server with Ctrl+C in the terminal when you are done.
 

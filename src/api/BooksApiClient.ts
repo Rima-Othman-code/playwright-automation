@@ -51,4 +51,16 @@ export class BooksApiClient {
       },
     });
   }
+
+
+  async updateOrder(authToken: string, orderId: string, updatedCustomerName: string) {
+    return await this.request.patch(`/orders/${orderId}`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+      data: {
+        customerName: updatedCustomerName,
+      },
+    });
+  }
 }

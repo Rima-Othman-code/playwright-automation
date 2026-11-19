@@ -5,81 +5,90 @@ import { generateUniqueEmail } from '../../src/utils/data-generator';
 test.describe.serial('Simple Books API Automation Suite @api', () => {
   let apiClient: BooksApiClient;
   let authToken: string;
-  let availableBookId: number;
+  let bookId: number;
+  let orderId: string;
+  const customerName = 'Rima Othman';
 
   test.beforeEach(async ({ request }) => {
     apiClient = new BooksApiClient(request);
   });
 
-  test('TC_API_001: Verify API health status returns 200 OK', async () => {
-    const response = await apiClient.getStatus();
-    expect(response.status()).toBe(200);
+  // TC_API_001: Authenticate Client and Create New Book Order
+  test('TC_API_001: Authenticate Client and Create New Book Order', async () => {
+    // 1. Send POST /api-clients/ with a dynamic email to generate a Bearer token
+    const clientResponse = await apiClient.registerClient(customerName, generateUniqueEmail());
+    expect(clientResponse.status()).toBe(201); 
 
-    const body = await response.json();
-    expect(body.status).toBe('OK');
+    const clientBody = await clientResponse.json();
+    expect(clientBody).toHaveProperty('accessToken');
+    authToken = clientBody.accessToken;
+
+    // Retrieve an available book to obtain a valid bookId
+    const booksResponse = await apiClient.getBooks();
+    expect(booksResponse.status()).toBe(200);
+    const books = await booksResponse.json();
+    const availableBook = books.find((b: any) => b.available === true);
+    bookId = availableBook ? availableBook.id : 1;
+
+    // 2. Send POST /orders utilizing the generated token, passing a valid bookId and customerName
+    const orderResponse = await apiClient.createOrder(authToken, bookId, customerName);
+    expect(orderResponse.status()).toBe(201);
+    
+    const orderBody = await orderResponse.json();
+    expect(orderBody).toHaveProperty('created', true);
+    expect(orderBody).toHaveProperty('orderId');
+    expect(orderBody.orderId).toBeTruthy();
+
+    // Extracting the orderId into the suite-level variable
+    orderId = orderBody.orderId;
   });
 
-  test('TC_API_002: Retrieve filtered list of available books', async () => {
-    const response = await apiClient.getBooks({ type: 'fiction', limit: 5 });
-    expect(response.status()).toBe(200);
+  // TC_API_002: Retrieve Details of a Newly Created Order
+  test('TC_API_002: Retrieve Details of a Newly Created Order', async () => {
+    // 1. Send GET /orders/:orderId explicitly using the order ID generated and extracted in TC_API_001
+    const getOrderResponse = await apiClient.getOrder(authToken, orderId);
 
-    const books = await response.json();
-    expect(Array.isArray(books)).toBeTruthy();
-    expect(books.length).toBeGreaterThan(0);
-    expect(books.length).toBeLessThanOrEqual(5);
+    // 2. Assert a 200 OK status code
+    expect(getOrderResponse.status()).toBe(200);
 
-    for (const book of books) {
-      expect(book.type).toBe('fiction');
-      expect(book).toHaveProperty('id');
-      expect(book).toHaveProperty('name');
-      expect(book).toHaveProperty('available');
-    }
-
-    const availableBook = books.find((b: { available: boolean }) => b.available === true);
-    expect(availableBook).toBeDefined();
-    availableBookId = availableBook.id;
+    // 3. Verify the response payload accurately reflects the bookId and customerName submitted during creation
+    const orderDetails = await getOrderResponse.json();
+    expect(orderDetails).toHaveProperty('id', orderId);
+    expect(orderDetails).toHaveProperty('bookId', bookId);
+    expect(orderDetails).toHaveProperty('customerName', customerName);
   });
 
-  test('TC_API_003: Register dynamic API client and extract Bearer token', async () => {
-    const uniqueEmail = generateUniqueEmail();
-    const response = await apiClient.registerClient('Rima QA Automation', uniqueEmail);
-    expect(response.status()).toBe(201);
+  // TC_API_003: Modify Customer Name on an Existing Order
+  test('TC_API_003: Modify Customer Name on an Existing Order', async () => {
+    const updatedCustomerName = 'Rima Othman Updated';
 
-    const body = await response.json();
-    expect(body).toHaveProperty('accessToken');
-    expect(typeof body.accessToken).toBe('string');
-    expect(body.accessToken.length).toBeGreaterThan(10);
+    // 1. Send PATCH /orders/:orderId to update the customerName property
+    const patchResponse = await apiClient.updateOrder(authToken, orderId, updatedCustomerName);
 
-    authToken = body.accessToken;
+    // 2. Assert a 204 No Content status code
+    expect(patchResponse.status()).toBe(204);
+
+    // 3. Send a follow-up GET /orders/:orderId request to verify the customerName was successfully updated
+    const getOrderResponse = await apiClient.getOrder(authToken, orderId);
+    expect(getOrderResponse.status()).toBe(200);
+
+    const orderDetails = await getOrderResponse.json();
+    expect(orderDetails).toHaveProperty('customerName', updatedCustomerName);
   });
 
-  test('TC_API_004: End-to-End order lifecycle (Create -> Get -> Delete -> Verify 404)', async () => {
-    const customerName = 'Rima Othman';
-
-    // 1. Create Order (POST /orders)
-    const createResponse = await apiClient.createOrder(authToken, availableBookId, customerName);
-    expect(createResponse.status()).toBe(201);
-
-    const createBody = await createResponse.json();
-    expect(createBody.created).toBe(true);
-    expect(createBody).toHaveProperty('orderId');
-    const orderId = createBody.orderId;
-
-    // 2. Retrieve Order (GET /orders/:orderId)
-    const getResponse = await apiClient.getOrder(authToken, orderId);
-    expect(getResponse.status()).toBe(200);
-
-    const orderDetails = await getResponse.json();
-    expect(orderDetails.id).toBe(orderId);
-    expect(orderDetails.bookId).toBe(availableBookId);
-    expect(orderDetails.customerName).toBe(customerName);
-
-    // 3. Delete Order (DELETE /orders/:orderId)
+  // TC_API_004: Delete Existing Order and Verify 404 Not Found
+  test('TC_API_004: Delete Existing Order and Verify 404 Not Found', async () => {
+    // 1. Send DELETE /orders/:orderId for the created order
     const deleteResponse = await apiClient.deleteOrder(authToken, orderId);
+
+    // 2. Assert a 204 No Content status code
     expect(deleteResponse.status()).toBe(204);
 
-    // 4. Verify Deletion returns 404 Not Found
-    const verifyDeletedResponse = await apiClient.getOrder(authToken, orderId);
-    expect(verifyDeletedResponse.status()).toBe(404);
+    // 3. Send a follow-up GET /orders/:orderId request
+    const getOrderResponse = await apiClient.getOrder(authToken, orderId);
+
+    // 4. Assert a 404 Not Found status code to confirm the record was completely removed
+    expect(getOrderResponse.status()).toBe(404);
   });
+
 });

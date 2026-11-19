@@ -32,6 +32,30 @@ export class InventoryPage {
     return priceTexts.map((price) => parseFloat(price.replace('$', '')));
   }
 
+  // Inside src/pages/InventoryPage.ts
+
+async addTwoMostExpensiveProducts() {
+  const items = await this.page.locator('.inventory_item').all();
+  
+  const productData: { price: number; element: any }[] = [];
+
+
+  for (const item of items) {
+    const priceText = await item.locator('.inventory_item_price').textContent();
+ 
+    const price = parseFloat(priceText?.replace('$', '') || '0');
+    
+    productData.push({ price, element: item });
+  }
+
+
+  productData.sort((a, b) => b.price - a.price);
+
+
+  await productData[0].element.locator('button[id^="add-to-cart"]').click();
+  await productData[1].element.locator('button[id^="add-to-cart"]').click();
+}
+
   async addProductToCartByIndex(index: number) {
     const addButtons = this.page.locator('button[data-test^="add-to-cart"]');
     await addButtons.nth(index).click();
